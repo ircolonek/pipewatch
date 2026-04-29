@@ -1,7 +1,15 @@
-"""pipewatch.sources — built-in metric source implementations."""
+"""pipewatch.sources — built-in metric source registry.
 
-# Import built-in sources so their @register_source decorators run
-# and they are available via get_source() without explicit imports.
-from pipewatch.sources import http_source  # noqa: F401
+Importing this package automatically registers all bundled sources so that
+``get_source('http')``, ``get_source('db')``, and ``get_source('file')``
+work without explicit imports by callers.
+"""
 
-__all__ = ["http_source"]
+from pipewatch.sources.base import BaseSource, get_source, register_source  # noqa: F401
+
+# Trigger registration of built-in sources.
+import pipewatch.sources.db_source    # noqa: F401
+import pipewatch.sources.file_source  # noqa: F401
+import pipewatch.sources.http_source  # noqa: F401
+
+__all__ = ["BaseSource", "get_source", "register_source"]
