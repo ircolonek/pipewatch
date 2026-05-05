@@ -28,6 +28,25 @@ class DbSource(BaseSource):
     def source_name(self) -> str:  # noqa: D102
         return "db"
 
+    def _build_error_metric(self, name: str, sql: str, exc: Exception) -> Metric:
+        """Return a zero-value :class:`Metric` capturing a query-level error.
+
+        Parameters
+        ----------
+        name:
+            Metric name from the query config entry.
+        sql:
+            The SQL string that raised the exception.
+        exc:
+            The caught exception.
+        """
+        return Metric(
+            name=name,
+            value=0.0,
+            source=self.source_name(),
+            metadata={"error": str(exc), "sql": sql},
+        )
+
     def fetch(self) -> List[Metric]:  # noqa: D102
         connect_fn = self.config.get("connect_fn")
         dsn: str = self.config.get("dsn", "")
@@ -60,14 +79,7 @@ class DbSource(BaseSource):
                         )
                     )
                 except Exception as exc:  # noqa: BLE001
-                    metrics.append(
-                        Metric(
-                            name=name,
-                            value=0.0,
-                            source=self.source_name(),
-                            metadata={"error": str(exc), "sql": sql},
-                        )
-                    )
+                    metrics.append(self._build_error_metric(name, sql, exc))
         finally:
             conn.close()
 
