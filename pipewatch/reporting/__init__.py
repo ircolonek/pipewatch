@@ -1,4 +1,16 @@
-"""Reporting sub-package."""
+"""Reporting sub-package.
+
+This package provides tools for generating, formatting, and exporting
+pipeline monitoring reports. Key capabilities include:
+
+- Summary report generation (``SummaryReport``, ``build_summary``)
+- Data export to JSON and CSV formats (``export_json``, ``export_csv``, ``export_to_file``)
+- Human-readable formatting of summaries and alerts (``format_summary``, ``format_alerts``)
+- Interactive dashboard rendering (``render_dashboard``)
+- Metric trend tracking over time (``MetricTrend``, ``TrendPoint``)
+- Alert notifications (``AlertNotifier``)
+- Historical metric storage and retrieval (``MetricHistory``, ``HistoryEntry``)
+"""
 
 from pipewatch.reporting.summary import SummaryReport, build_summary
 from pipewatch.reporting.exporter import export_json, export_csv, export_to_file
