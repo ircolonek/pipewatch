@@ -1,4 +1,4 @@
-"""Reporting sub-package for pipewatch."""
+"""Reporting package for pipewatch."""
 
 from pipewatch.reporting.summary import SummaryReport, build_summary
 from pipewatch.reporting.exporter import export_json, export_csv, export_to_file
@@ -8,6 +8,11 @@ from pipewatch.reporting.trend import MetricTrend, TrendPoint
 from pipewatch.reporting.notifier import AlertNotifier
 from pipewatch.reporting.history import MetricHistory, HistoryEntry
 from pipewatch.reporting.aggregator import AggregatedStats, aggregate_metrics
+from pipewatch.reporting.comparator import (
+    MetricDiff,
+    ComparisonReport,
+    compare_snapshots,
+)
 
 __all__ = [
     "SummaryReport",
@@ -25,4 +30,7 @@ __all__ = [
     "HistoryEntry",
     "AggregatedStats",
     "aggregate_metrics",
+    "MetricDiff",
+    "ComparisonReport",
+    "compare_snapshots",
 ]
