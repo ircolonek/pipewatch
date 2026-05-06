@@ -1,63 +1,62 @@
-"""Pipeline runner: orchestrates source fetching, metric collection, and alert dispatch."""
+"""Pipeline runner — fetches metrics from a source and records them."""
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
-from typing import Any
+from typing import List, Optional
 
-from pipewatch.metrics.collector import MetricCollector
 from pipewatch.alerts.dispatcher import AlertDispatcher
+from pipewatch.metrics.collector import MetricCollector
+from pipewatch.reporting.history import MetricHistory
 from pipewatch.sources.base import get_source
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
 class PipelineConfig:
-    """Configuration for a single pipeline run."""
-
-    name: str
-    source_type: str
-    source_options: dict[str, Any] = field(default_factory=dict)
-    thresholds: dict[str, tuple[float, float]] = field(default_factory=dict)
+    source_name: str
+    source_config: dict = field(default_factory=dict)
+    alert_rules: list = field(default_factory=list)
+    history_path: Optional[str] = None
 
 
 class PipelineRunner:
-    """Coordinates fetching metrics from a source and evaluating alert rules."""
+    """Orchestrates a single pipeline run."""
 
     def __init__(
         self,
         config: PipelineConfig,
-        dispatcher: AlertDispatcher,
-        collector: MetricCollector | None = None,
+        collector: Optional[MetricCollector] = None,
+        dispatcher: Optional[AlertDispatcher] = None,
+        history: Optional[MetricHistory] = None,
     ) -> None:
-        self.config = config
-        self.dispatcher = dispatcher
-        self.collector = collector or MetricCollector(
-            thresholds=config.thresholds
-        )
+        self._config = config
+        self._collector = collector or MetricCollector()
+        self._dispatcher = dispatcher or AlertDispatcher()
+        self._history = history
 
-    def run(self) -> list[dict[str, Any]]:
-        """Fetch metrics, record them, evaluate alerts, and return fired alerts."""
-        source_cls = get_source(self.config.source_type)
+        for rule in config.alert_rules:
+            self._dispatcher.add_rule(rule)
+
+    # ------------------------------------------------------------------
+    def run(self) -> List:
+        """Fetch metrics, record them, evaluate alerts, persist history.
+
+        Returns the list of fired alert messages (may be empty).
+        """
+        source_cls = get_source(self._config.source_name)
         if source_cls is None:
-            raise ValueError(
-                f"Unknown source type: {self.config.source_type!r}"
-            )
+            raise ValueError(f"Unknown source: {self._config.source_name!r}")
 
-        source = source_cls(**self.config.source_options)
-        logger.info("[%s] fetching from %s", self.config.name, source.source_name())
-
+        source = source_cls(self._config.source_config)
         metrics = source.fetch()
-        for metric in metrics:
-            self.collector.record(metric)
 
-        fired = self.dispatcher.evaluate(self.collector.get_all())
-        logger.info(
-            "[%s] %d metric(s) collected, %d alert(s) fired",
-            self.config.name,
-            len(metrics),
-            len(fired),
-        )
-        return fired
+        for metric in metrics:
+            self._collector.record(metric)
+            if self._history is not None:
+                self._history.record(metric)
+
+        if self._history is not None:
+            self._history.save()
+
+        alerts = self._dispatcher.evaluate(metrics)
+        return alerts
