@@ -1,5 +1,4 @@
-"""Reporting sub-package for pipewatch."""
-
+"""Reporting package for pipewatch."""
 from pipewatch.reporting.summary import SummaryReport, build_summary
 from pipewatch.reporting.exporter import export_json, export_csv, export_to_file
 from pipewatch.reporting.formatter import format_summary, format_alerts
@@ -12,7 +11,8 @@ from pipewatch.reporting.comparator import MetricDiff, compare_metrics
 from pipewatch.reporting.baseline import BaselineEntry, BaselineReport
 from pipewatch.reporting.anomaly import AnomalyResult, detect_anomalies
 from pipewatch.reporting.correlation import CorrelationResult, correlate_metrics
-from pipewatch.reporting.forecast import ForecastPoint, MetricForecast, forecast_metric
+from pipewatch.reporting.forecast import ForecastPoint, MetricForecast
+from pipewatch.reporting.ranking import RankedMetric, rank_metrics
 
 __all__ = [
     "SummaryReport",
@@ -40,5 +40,6 @@ __all__ = [
     "correlate_metrics",
     "ForecastPoint",
     "MetricForecast",
-    "forecast_metric",
+    "RankedMetric",
+    "rank_metrics",
 ]

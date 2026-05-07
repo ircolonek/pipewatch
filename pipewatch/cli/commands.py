@@ -2,16 +2,18 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+from typing import List
 
 from pipewatch import __version__  # type: ignore[attr-defined]
-from pipewatch.cli.config_loader import load_config, ConfigError
-from pipewatch.pipeline.runner import PipelineConfig, PipelineRunner
+from pipewatch.cli.config_loader import ConfigError, load_config
 from pipewatch.metrics.collector import MetricCollector
-from pipewatch.alerts.dispatcher import AlertDispatcher
+from pipewatch.pipeline.runner import PipelineConfig, PipelineRunner
 from pipewatch.reporting.summary import build_summary
-from pipewatch.reporting.formatter import format_summary, format_alerts
-from pipewatch.reporting.dashboard import render_dashboard
+from pipewatch.reporting.formatter import format_summary
+from pipewatch.reporting.ranking import rank_metrics
+from pipewatch.sources import get_source
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -22,19 +24,11 @@ def _build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command")
 
     run_p = sub.add_parser("run", help="Fetch metrics and evaluate alerts.")
-    run_p.add_argument("--source", required=True, help="Source key (http/db/file).")
+    run_p.add_argument("--source", required=True, help="Source type key (http/db/file).")
     run_p.add_argument("--config", required=True, help="Path to YAML config file.")
+    run_p.add_argument("--output", choices=["text", "json"], default="text")
     run_p.add_argument(
-        "--dashboard",
-        action="store_true",
-        default=False,
-        help="Render terminal dashboard instead of plain summary.",
-    )
-    run_p.add_argument(
-        "--export",
-        metavar="FILE",
-        default=None,
-        help="Export report to JSON or CSV file.",
+        "--rank", action="store_true", help="Show metrics ranked by health score."
     )
 
     sub.add_parser("version", help="Print version and exit.")
@@ -43,42 +37,39 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def cmd_run(args: argparse.Namespace) -> int:
     try:
-        cfg = load_config(args.config)
+        config = load_config(args.config)
     except ConfigError as exc:
         print(f"[pipewatch] config error: {exc}", file=sys.stderr)
         return 1
 
-    collector = MetricCollector()
-    dispatcher = AlertDispatcher()
-    for rule_cfg in cfg.get("alert_rules", []):
-        from pipewatch.alerts.rules import AlertRule
-        dispatcher.add_rule(AlertRule(**rule_cfg))
+    source_cls = get_source(args.source)
+    if source_cls is None:
+        print(f"[pipewatch] unknown source: {args.source!r}", file=sys.stderr)
+        return 1
 
-    pipeline_cfg = PipelineConfig(
-        source_key=args.source,
-        source_options=cfg.get("source_options", {}),
-    )
-    runner = PipelineRunner(pipeline_cfg, collector, dispatcher)
+    source = source_cls(config)
+    collector = MetricCollector()
+    runner = PipelineRunner(PipelineConfig(source=source, collector=collector))
     runner.run()
 
     metrics = collector.get_all()
-    report = build_summary(metrics)
-    fired = dispatcher.evaluate(metrics)
+    summary = build_summary(metrics)
 
-    if getattr(args, "dashboard", False):
-        print(render_dashboard(report))
+    if args.output == "json":
+        data = summary.to_dict()
+        if args.rank:
+            ranked = rank_metrics(metrics)
+            data["ranking"] = [r.to_dict() for r in ranked]
+        print(json.dumps(data, indent=2))
     else:
-        print(format_summary(report))
+        print(format_summary(summary))
+        if args.rank:
+            ranked = rank_metrics(metrics)
+            print("\n--- Metric Ranking (worst first) ---")
+            for r in ranked:
+                print(f"  #{r.rank:>3}  [{r.metric.status.value.upper():>8}]  {r.metric.name}  score={r.score:.2f}")
 
-    if fired:
-        print(format_alerts(fired))
-
-    if getattr(args, "export", None):
-        from pipewatch.reporting.exporter import export_to_file
-        export_to_file(report, args.export)
-        print(f"[pipewatch] report exported to {args.export}")
-
-    return 1 if report.critical_count > 0 else 0
+    return 0 if summary.critical_count == 0 else 2
 
 
 def cmd_version(_args: argparse.Namespace) -> int:
@@ -86,7 +77,7 @@ def cmd_version(_args: argparse.Namespace) -> int:
     return 0
 
 
-def main(argv=None) -> None:
+def main(argv: List[str] | None = None) -> None:
     parser = _build_parser()
     args = parser.parse_args(argv)
     if args.command == "run":
