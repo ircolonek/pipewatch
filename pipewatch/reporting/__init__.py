@@ -4,15 +4,13 @@ from pipewatch.reporting.summary import SummaryReport, build_summary
 from pipewatch.reporting.exporter import export_json, export_csv, export_to_file
 from pipewatch.reporting.formatter import format_summary, format_alerts
 from pipewatch.reporting.dashboard import render_dashboard
-from pipewatch.reporting.trend import MetricTrend, TrendPoint
+from pipewatch.reporting.trend import TrendPoint, MetricTrend
 from pipewatch.reporting.notifier import AlertNotifier
-from pipewatch.reporting.history import MetricHistory, HistoryEntry
+from pipewatch.reporting.history import HistoryEntry, MetricHistory
 from pipewatch.reporting.aggregator import AggregatedStats, aggregate_metrics
-from pipewatch.reporting.comparator import (
-    MetricDiff,
-    ComparisonReport,
-    compare_snapshots,
-)
+from pipewatch.reporting.comparator import MetricDiff, compare_metrics
+from pipewatch.reporting.baseline import BaselineEntry, BaselineReport
+from pipewatch.reporting.anomaly import AnomalyResult, detect_anomalies
 
 __all__ = [
     "SummaryReport",
@@ -23,14 +21,17 @@ __all__ = [
     "format_summary",
     "format_alerts",
     "render_dashboard",
-    "MetricTrend",
     "TrendPoint",
+    "MetricTrend",
     "AlertNotifier",
-    "MetricHistory",
     "HistoryEntry",
+    "MetricHistory",
     "AggregatedStats",
     "aggregate_metrics",
     "MetricDiff",
-    "ComparisonReport",
-    "compare_snapshots",
+    "compare_metrics",
+    "BaselineEntry",
+    "BaselineReport",
+    "AnomalyResult",
+    "detect_anomalies",
 ]
