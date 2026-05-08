@@ -1,24 +1,21 @@
-"""Reporting sub-package."""
+"""Reporting package for pipewatch."""
+
 from pipewatch.reporting.summary import SummaryReport, build_summary
 from pipewatch.reporting.exporter import export_json, export_csv, export_to_file
 from pipewatch.reporting.formatter import format_summary, format_alerts
 from pipewatch.reporting.dashboard import render_dashboard
-from pipewatch.reporting.trend import TrendPoint, MetricTrend
+from pipewatch.reporting.trend import MetricTrend, TrendPoint
 from pipewatch.reporting.notifier import AlertNotifier
-from pipewatch.reporting.history import HistoryEntry, MetricHistory
+from pipewatch.reporting.history import MetricHistory, HistoryEntry
 from pipewatch.reporting.aggregator import AggregatedStats, aggregate_metrics
 from pipewatch.reporting.comparator import MetricDiff, compare_metrics
-from pipewatch.reporting.baseline import BaselineEntry, BaselineReport
+from pipewatch.reporting.baseline import BaselineReport, BaselineEntry
 from pipewatch.reporting.anomaly import AnomalyResult, detect_anomalies
 from pipewatch.reporting.correlation import CorrelationResult, correlate_metrics
-from pipewatch.reporting.forecast import ForecastPoint, MetricForecast
+from pipewatch.reporting.forecast import MetricForecast, ForecastPoint
 from pipewatch.reporting.ranking import RankedMetric, rank_metrics
-from pipewatch.reporting.tagging import (
-    TaggedMetric,
-    tag_metrics,
-    filter_by_tag,
-    group_by_tag,
-)
+from pipewatch.reporting.tagging import TaggedMetric, tag_metrics
+from pipewatch.reporting.heatmap import MetricHeatmap, HeatmapCell, build_heatmap
 
 __all__ = [
     "SummaryReport",
@@ -29,27 +26,28 @@ __all__ = [
     "format_summary",
     "format_alerts",
     "render_dashboard",
-    "TrendPoint",
     "MetricTrend",
+    "TrendPoint",
     "AlertNotifier",
-    "HistoryEntry",
     "MetricHistory",
+    "HistoryEntry",
     "AggregatedStats",
     "aggregate_metrics",
     "MetricDiff",
     "compare_metrics",
-    "BaselineEntry",
     "BaselineReport",
+    "BaselineEntry",
     "AnomalyResult",
     "detect_anomalies",
     "CorrelationResult",
     "correlate_metrics",
-    "ForecastPoint",
     "MetricForecast",
+    "ForecastPoint",
     "RankedMetric",
     "rank_metrics",
     "TaggedMetric",
     "tag_metrics",
-    "filter_by_tag",
-    "group_by_tag",
+    "MetricHeatmap",
+    "HeatmapCell",
+    "build_heatmap",
 ]
