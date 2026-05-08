@@ -1,4 +1,7 @@
-"""Reporting package for pipewatch."""
+"""Reporting sub-package for pipewatch.
+
+Public re-exports for the most commonly used reporting utilities.
+"""
 
 from pipewatch.reporting.summary import SummaryReport, build_summary
 from pipewatch.reporting.exporter import export_json, export_csv, export_to_file
@@ -15,7 +18,8 @@ from pipewatch.reporting.correlation import CorrelationResult, correlate_metrics
 from pipewatch.reporting.forecast import MetricForecast, ForecastPoint
 from pipewatch.reporting.ranking import RankedMetric, rank_metrics
 from pipewatch.reporting.tagging import TaggedMetric, tag_metrics
-from pipewatch.reporting.heatmap import MetricHeatmap, HeatmapCell, build_heatmap
+from pipewatch.reporting.heatmap import MetricHeatmap, HeatmapCell
+from pipewatch.reporting.digest import DigestReport, build_digest
 
 __all__ = [
     "SummaryReport",
@@ -49,5 +53,6 @@ __all__ = [
     "tag_metrics",
     "MetricHeatmap",
     "HeatmapCell",
-    "build_heatmap",
+    "DigestReport",
+    "build_digest",
 ]
