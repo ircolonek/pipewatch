@@ -36,6 +36,12 @@ class AnomalyResult:
         )
 
 
+def _compute_stddev(values: List[float], mean: float) -> float:
+    """Return the population standard deviation for *values* given a precomputed *mean*."""
+    variance = sum((x - mean) ** 2 for x in values) / len(values)
+    return math.sqrt(variance)
+
+
 def detect_anomalies(
     metrics: List[Metric],
     history: Dict[str, List[float]],
@@ -62,8 +68,7 @@ def detect_anomalies(
             continue
 
         mean = sum(past) / len(past)
-        variance = sum((x - mean) ** 2 for x in past) / len(past)
-        stddev = math.sqrt(variance)
+        stddev = _compute_stddev(past, mean)
 
         if stddev == 0.0:
             z_score = 0.0
